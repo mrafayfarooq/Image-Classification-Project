@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<process version="6.2.000">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="6.2.000" expanded="true" name="Process">
+    <parameter key="logverbosity" value="init"/>
+    <parameter key="random_seed" value="2001"/>
+    <parameter key="send_mail" value="never"/>
+    <parameter key="notification_email" value=""/>
+    <parameter key="process_duration_for_mail" value="30"/>
+    <parameter key="encoding" value="SYSTEM"/>
+    <process expanded="true">
+      <operator activated="true" class="imageprocessing:multiple_color_image_opener" compatibility="1.4.001" expanded="true" height="60" name="MCIO" width="90" x="45" y="120">
+        <parameter key="datamanagement" value="double_array"/>
+        <list key="images">
+          <parameter key="Cats" value="C:\Users\Rafay Farooq\Desktop\feature-extraction-master\images\cat1"/>
+          <parameter key="Dogs" value="C:\Users\Rafay Farooq\Desktop\feature-extraction-master\images\dog1"/>
+        </list>
+        <parameter key="auto_adjust_contrast" value="true"/>
+        <parameter key="set_mask" value="false"/>
+        <parameter key="mask_foldername" value="fitness"/>
+        <parameter key="extension" value="ALL IMAGES"/>
+        <parameter key="assign_label" value="true"/>
+        <parameter key="filter_by_orientation" value="false"/>
+        <parameter key="orientation" value="SAGITTAL"/>
+        <parameter key="include_unknown_orientation" value="false"/>
+        <parameter key="ignore_errors" value="false"/>
+        <process expanded="true">
+          <operator activated="true" class="multiply" compatibility="6.2.000" expanded="true" height="94" name="Multiply" width="90" x="45" y="210"/>
+          <operator activated="true" class="imageprocessing:gaussian_detector" compatibility="1.4.001" expanded="true" height="76" name="gaussian_detector (2)" width="90" x="179" y="30">
+            <parameter key="steps_per_scale_octave" value="3"/>
+            <parameter key="feature_descriptor_size" value="4"/>
+            <parameter key="feature_descriptor_orientation_bins" value="8"/>
+            <parameter key="initial_sigma" value="2.0"/>
+            <parameter key="minimum_image_size" value="64"/>
+            <parameter key="maximum_image_size" value="1024"/>
+          </operator>
+          <operator activated="true" class="imageprocessing:feature_extraction_operator2" compatibility="1.4.001" expanded="true" height="94" name="Local Feature Extractor with Points" width="90" x="313" y="120">
+            <parameter key="include_position_filename" value="true"/>
+            <parameter key="include_position_in_img" value="true"/>
+            <parameter key="window_width" value="9"/>
+            <parameter key="window_height" value="9"/>
+            <parameter key="Window out of image bounds" value="Skip"/>
+            <process expanded="true">
+              <operator activated="true" class="imageprocessing:histogram" compatibility="1.4.001" expanded="true" height="60" name="histogram" width="90" x="380" y="75">
+                <parameter key="Bins" value="64"/>
+                <parameter key="Normalize" value="true"/>
+              </operator>
+              <operator activated="true" class="imageprocessing:color_to_grayscale" compatibility="1.4.001" expanded="true" height="60" name="Color to grayscale" width="90" x="45" y="120"/>
+              <operator activated="true" class="multiply" compatibility="6.2.000" expanded="true" height="112" name="Multiply (2)" width="90" x="179" y="165"/>
+              <operator activated="true" class="imageprocessing:line_haar_like_feature" compatibility="1.4.001" expanded="true" height="60" name="Line Haar-like feature (2)" width="90" x="380" y="390">
+                <parameter key="border_types" value="Not allowed"/>
+                <parameter key="x_size" value="3"/>
+                <parameter key="y_size" value="1"/>
+                <parameter key="x_position" value="0"/>
+                <parameter key="y_position" value="0"/>
+                <parameter key="haar_orientation" value="horizontal"/>
+              </operator>
+              <operator activated="true" class="imageprocessing:diagonal_haar_like_feature" compatibility="1.4.001" expanded="true" height="60" name="Diagonal Haar-like feature" width="90" x="380" y="255">
+                <parameter key="border_types" value="Not allowed"/>
+                <parameter key="Window size" value="2"/>
+              </operator>
+              <operator activated="true" class="imageprocessing:Edge_Haar-like_feature" compatibility="1.4.001" expanded="true" height="60" name="Edge Haar-like feature" width="90" x="380" y="165">
+                <parameter key="border_types" value="Not allowed"/>
+                <parameter key="Type of feature" value="Horizontal (=)"/>
+                <parameter key="X position" value="0"/>
+                <parameter key="Y position" value="0"/>
+                <parameter key="X size" value="2"/>
+                <parameter key="Y size" value="1"/>
+              </operator>
+              <connect from_port="image 1" to_op="histogram" to_port="color image plus"/>
+              <connect from_port="image 2" to_op="Color to grayscale" to_port="color image plus"/>
+              <connect from_op="histogram" from_port="features" to_port="feature 1"/>
+              <connect from_op="Color to grayscale" from_port="grayscale image" to_op="Multiply (2)" to_port="input"/>
+              <connect from_op="Multiply (2)" from_port="output 1" to_op="Edge Haar-like feature" to_port="grayscale image plus"/>
+              <connect from_op="Multiply (2)" from_port="output 2" to_op="Diagonal Haar-like feature" to_port="grayscale image plus"/>
+              <connect from_op="Multiply (2)" from_port="output 3" to_op="Line Haar-like feature (2)" to_port="grayscale image plus"/>
+              <connect from_op="Line Haar-like feature (2)" from_port="feature" to_port="feature 4"/>
+              <connect from_op="Diagonal Haar-like feature" from_port="feature" to_port="feature 3"/>
+              <connect from_op="Edge Haar-like feature" from_port="feature" to_port="feature 2"/>
+              <portSpacing port="source_image 1" spacing="0"/>
+              <portSpacing port="source_image 2" spacing="0"/>
+              <portSpacing port="source_image 3" spacing="0"/>
+              <portSpacing port="sink_feature 1" spacing="0"/>
+              <portSpacing port="sink_feature 2" spacing="0"/>
+              <portSpacing port="sink_feature 3" spacing="0"/>
+              <portSpacing port="sink_feature 4" spacing="0"/>
+              <portSpacing port="sink_feature 5" spacing="0"/>
+            </process>
+          </operator>
+          <connect from_port="color image plus" to_op="Multiply" to_port="input"/>
+          <connect from_op="Multiply" from_port="output 1" to_op="gaussian_detector (2)" to_port="image"/>
+          <connect from_op="Multiply" from_port="output 2" to_op="Local Feature Extractor with Points" to_port="color image plus"/>
+          <connect from_op="gaussian_detector (2)" from_port="points" to_op="Local Feature Extractor with Points" to_port="points"/>
+          <connect from_op="Local Feature Extractor with Points" from_port="example set" to_port="Example set"/>
+          <portSpacing port="source_color image plus" spacing="0"/>
+          <portSpacing port="sink_Example set" spacing="0"/>
+        </process>
+      </operator>
+      <operator activated="true" class="k_means" compatibility="6.2.000" expanded="true" height="76" name="Clustering" width="90" x="246" y="120">
+        <parameter key="add_cluster_attribute" value="true"/>
+        <parameter key="add_as_label" value="false"/>
+        <parameter key="remove_unlabeled" value="false"/>
+        <parameter key="k" value="100"/>
+        <parameter key="max_runs" value="10"/>
+        <parameter key="determine_good_start_values" value="false"/>
+        <parameter key="measure_types" value="BregmanDivergences"/>
+        <parameter key="mixed_measure" value="MixedEuclideanDistance"/>
+        <parameter key="nominal_measure" value="NominalDistance"/>
+        <parameter key="numerical_measure" value="EuclideanDistance"/>
+        <parameter key="divergence" value="SquaredEuclideanDistance"/>
+        <parameter key="kernel_type" value="radial"/>
+        <parameter key="kernel_gamma" value="1.0"/>
+        <parameter key="kernel_sigma1" value="1.0"/>
+        <parameter key="kernel_sigma2" value="0.0"/>
+        <parameter key="kernel_sigma3" value="2.0"/>
+        <parameter key="kernel_degree" value="3.0"/>
+        <parameter key="kernel_shift" value="1.0"/>
+        <parameter key="kernel_a" value="1.0"/>
+        <parameter key="kernel_b" value="0.0"/>
+        <parameter key="max_optimization_steps" value="100"/>
+        <parameter key="use_local_random_seed" value="true"/>
+        <parameter key="local_random_seed" value="1992"/>
+      </operator>
+      <connect from_op="MCIO" from_port="example set" to_op="Clustering" to_port="example set"/>
+      <connect from_op="Clustering" from_port="cluster model" to_port="result 1"/>
+      <connect from_op="Clustering" from_port="clustered set" to_port="result 2"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+    </process>
+  </operator>
+</process>
